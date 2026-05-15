@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Категории{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Категории медикаментов</h1>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card table-card p-3">
+            <h5>Добавить категорию</h5>
+            <form method="post">{% csrf_token %}{{ form.name }}{{ form.name.errors }}
+            <button class="btn btn-primary mt-2 w-100">Добавить</button></form>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card table-card">
+            <ul class="list-group list-group-flush">
+            {% for c in categories %}
+            <li class="list-group-item d-flex justify-content-between">{{ c.name }} <span class="badge bg-primary">{{ c.med_count }} преп.</span></li>
+            {% empty %}<li class="list-group-item text-muted">Нет категорий</li>{% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

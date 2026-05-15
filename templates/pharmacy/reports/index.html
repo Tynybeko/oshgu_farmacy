@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Отчёты{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4"><i class="bi bi-graph-up"></i> Отчёты</h1>
+<div class="btn-group flex-wrap mb-4">
+    <a href="?type=daily" class="btn btn-outline-primary {% if report_type == 'daily' %}active{% endif %}">Ежедневные продажи</a>
+    <a href="?type=monthly" class="btn btn-outline-primary {% if report_type == 'monthly' %}active{% endif %}">Месячная выручка</a>
+    <a href="?type=stock" class="btn btn-outline-primary {% if report_type == 'stock' %}active{% endif %}">Остатки</a>
+    <a href="?type=expiring" class="btn btn-outline-primary {% if report_type == 'expiring' %}active{% endif %}">Истекает срок</a>
+    <a href="?type=top" class="btn btn-outline-primary {% if report_type == 'top' %}active{% endif %}">Топ продаж</a>
+    <a href="?type=employees" class="btn btn-outline-primary {% if report_type == 'employees' %}active{% endif %}">Сотрудники</a>
+</div>
+<div class="card table-card">
+    <div class="card-header"><h5 class="mb-0">{{ title }}</h5></div>
+    <div class="card-body">
+        {% if report_type == 'daily' %}
+        <p class="fs-4">Итого: <strong>{{ total }} сом</strong> ({{ sales.count }} продаж)</p>
+        <table class="table"><thead><tr><th>№</th><th>Время</th><th>Кассир</th><th>Сумма</th></tr></thead>
+        <tbody>{% for s in sales %}<tr><td>{{ s.pk }}</td><td>{{ s.sale_date|date:"H:i" }}</td><td>{{ s.cashier.username }}</td><td>{{ s.total_price }} сом</td></tr>{% endfor %}</tbody></table>
+        {% elif report_type == 'monthly' %}
+        <p class="fs-2 text-success">Выручка: <strong>{{ total }} сом</strong></p>
+        {% elif report_type == 'stock' or report_type == 'expiring' %}
+        <table class="table"><thead><tr><th>Препарат</th><th>Кол-во</th><th>Срок</th><th>Цена</th></tr></thead>
+        <tbody>{% for m in medicines %}<tr><td>{{ m.name }}</td><td>{{ m.quantity }}</td><td>{{ m.expiry_date|date:"d.m.Y" }}</td><td>{{ m.price }} сом</td></tr>{% endfor %}</tbody></table>
+        {% elif report_type == 'top' %}
+        <table class="table"><thead><tr><th>Препарат</th><th>Продано</th><th>Сумма</th></tr></thead>
+        <tbody>{% for i in items %}<tr><td>{{ i.medicine__name }}</td><td>{{ i.total_qty }}</td><td>{{ i.total_sum }} сом</td></tr>{% endfor %}</tbody></table>
+        {% elif report_type == 'employees' %}
+        <table class="table"><thead><tr><th>Сотрудник</th><th>Продаж</th><th>Сумма</th></tr></thead>
+        <tbody>{% for e in employees %}<tr><td>{{ e.cashier__profile__fullname|default:e.cashier__username }}</td><td>{{ e.sales_count }}</td><td>{{ e.total_sum }} сом</td></tr>{% endfor %}</tbody></table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

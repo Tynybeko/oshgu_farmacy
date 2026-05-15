@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Новая поставка{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Регистрация поставки</h1>
+<form method="post" id="supplyForm">
+    {% csrf_token %}
+    <div class="card table-card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">{{ form.supplier.label_tag }}{{ form.supplier }}</div>
+                <div class="col-md-3">{{ form.paid_amount.label_tag }}{{ form.paid_amount }}</div>
+                <div class="col-md-12">{{ form.notes.label_tag }}{{ form.notes }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="card table-card mb-4">
+        <div class="card-header d-flex justify-content-between">
+            <span>Позиции</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addRow">+ Добавить</button>
+        </div>
+        <div class="card-body" id="itemsContainer"></div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg">Зарегистрировать</button>
+    <a href="{% url 'supply_list' %}" class="btn btn-outline-secondary">Отмена</a>
+    <input type="hidden" name="items" id="itemsJson">
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+const medicines = [{% for m in medicines %}{id:{{ m.id }},name:"{{ m.name|escapejs }}",price:"{{ m.price }}"}{% if not forloop.last %},{% endif %}{% endfor %}];
+let rows = 0;
+function addRow() {
+    const opts = medicines.map(m => `<option value="${m.id}" data-price="${m.price}">${m.name}</option>`).join('');
+    document.getElementById('itemsContainer').insertAdjacentHTML('beforeend',
+        `<div class="row g-2 mb-2 item-row">
+            <div class="col-5"><select class="form-select med-sel">${opts}</select></div>
+            <div class="col-3"><input type="number" class="form-control qty-inp" min="1" value="1" placeholder="Кол-во"></div>
+            <div class="col-3"><input type="number" class="form-control price-inp" step="0.01" value="${medicines[0]?.price||0}"></div>
+            <div class="col-1"><button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.item-row').remove()">×</button></div>
+        </div>`);
+    rows++;
+}
+document.getElementById('addRow').onclick = addRow;
+addRow();
+document.getElementById('itemsContainer').addEventListener('change', e => {
+    if (e.target.classList.contains('med-sel')) {
+        const opt = e.target.selectedOptions[0];
+        e.target.closest('.item-row').querySelector('.price-inp').value = opt.dataset.price;
+    }
+});
+document.getElementById('supplyForm').onsubmit = e => {
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        items.push({
+            medicine_id: parseInt(row.querySelector('.med-sel').value),
+            quantity: parseInt(row.querySelector('.qty-inp').value),
+            unit_price: parseFloat(row.querySelector('.price-inp').value)
+        });
+    });
+    document.getElementById('itemsJson').value = JSON.stringify(items);
+};
+</script>
+{% endblock %}

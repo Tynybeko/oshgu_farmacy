@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Журнал действий{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Журнал действий пользователей</h1>
+<div class="card table-card">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Детали</th><th>IP</th></tr></thead>
+            <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp|date:"d.m.Y H:i:s" }}</td>
+                <td>{{ log.user.username|default:"—" }}</td>
+                <td>{{ log.action }}</td>
+                <td><small>{{ log.details|truncatechars:80 }}</small></td>
+                <td>{{ log.ip_address|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

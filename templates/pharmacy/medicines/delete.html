@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Удаление{% endblock %}
+{% block content %}
+<div class="card table-card mx-auto" style="max-width:500px">
+    <div class="card-body p-4 text-center">
+        <i class="bi bi-exclamation-triangle text-danger" style="font-size:3rem"></i>
+        <h3 class="mt-3">Удалить «{{ medicine.name }}»?</h3>
+        <p class="text-muted">Это действие необратимо.</p>
+        <form method="post" class="d-flex gap-2 justify-content-center">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a href="{% url 'medicine_list' %}" class="btn btn-outline-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

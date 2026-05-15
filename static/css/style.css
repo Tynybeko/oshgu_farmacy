@@ -1,0 +1,69 @@
+:root {
+    --primary: #0d6efd;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+}
+
+body {
+    background: #f4f6f9;
+    min-height: 100vh;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%);
+}
+
+.login-card {
+    max-width: 420px;
+    width: 100%;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.2);
+}
+
+.stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.table-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.badge-low { background: #ffc107; color: #000; }
+.badge-expiring { background: #fd7e14; }
+.badge-expired { background: #dc3545; }
+
+.pos-cart {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.receipt-print {
+    max-width: 320px;
+    margin: 0 auto;
+    font-family: monospace;
+}
+
+@media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+}

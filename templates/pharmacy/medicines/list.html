@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Медикаменты{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <h1 class="h3 mb-0"><i class="bi bi-capsule"></i> Медикаменты</h1>
+    <a href="{% url 'medicine_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Добавить</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-4"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Поиск по названию, штрих-коду..."></div>
+    <div class="col-md-3">
+        <select name="category" class="form-select">
+            <option value="">Все категории</option>
+            {% for c in categories %}<option value="{{ c.id }}" {% if category_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="sort" class="form-select">
+            <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+            <option value="price" {% if sort == 'price' %}selected{% endif %}>По цене</option>
+            <option value="quantity" {% if sort == 'quantity' %}selected{% endif %}>По количеству</option>
+            <option value="expiry" {% if sort == 'expiry' %}selected{% endif %}>По сроку годности</option>
+        </select>
+    </div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Найти</button></div>
+</form>
+<div class="card table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr><th>Название</th><th>Категория</th><th>Производитель</th><th>Цена</th><th>Кол-во</th><th>Срок</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for m in medicines %}
+            <tr>
+                <td><strong>{{ m.name }}</strong>{% if m.barcode %}<br><small class="text-muted">{{ m.barcode }}</small>{% endif %}</td>
+                <td>{{ m.category|default:"—" }}</td>
+                <td>{{ m.manufacturer }}</td>
+                <td>{{ m.price }} сом</td>
+                <td>
+                    {% if m.is_low_stock %}<span class="badge badge-low">{{ m.quantity }}</span>
+                    {% else %}{{ m.quantity }}{% endif %}
+                </td>
+                <td>
+                    {% if m.is_expired %}<span class="badge badge-expired">{{ m.expiry_date|date:"d.m.Y" }}</span>
+                    {% elif m.is_expiring_soon %}<span class="badge badge-expiring">{{ m.expiry_date|date:"d.m.Y" }}</span>
+                    {% else %}{{ m.expiry_date|date:"d.m.Y" }}{% endif %}
+                </td>
+                <td class="text-nowrap">
+                    <a href="{% url 'medicine_edit' m.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                    {% if user_role == 'admin' %}
+                    <a href="{% url 'medicine_delete' m.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted py-4">Препараты не найдены</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

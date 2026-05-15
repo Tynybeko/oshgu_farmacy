@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}История продаж{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">История продаж</h1>
+<form class="row g-2 mb-3" method="get">
+    <div class="col-auto"><input type="date" name="from" value="{{ date_from }}" class="form-control"></div>
+    <div class="col-auto"><input type="date" name="to" value="{{ date_to }}" class="form-control"></div>
+    <div class="col-auto"><button class="btn btn-primary">Фильтр</button></div>
+</form>
+<div class="card table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>№</th><th>Дата</th><th>Кассир</th><th>Сумма</th><th></th></tr></thead>
+            <tbody>
+            {% for s in sales %}
+            <tr>
+                <td>{{ s.pk }}</td>
+                <td>{{ s.sale_date|date:"d.m.Y H:i" }}</td>
+                <td>{{ s.cashier.profile.fullname|default:s.cashier.username }}</td>
+                <td>{{ s.total_price }} сом</td>
+                <td><a href="{% url 'sale_receipt' s.pk %}" class="btn btn-sm btn-outline-primary">Чек</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted">Нет данных</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

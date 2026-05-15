@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Касса{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4"><i class="bi bi-cart-check"></i> Касса</h1>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card table-card mb-3">
+            <div class="card-body">
+                <label class="form-label">Штрих-код</label>
+                <div class="input-group">
+                    <input type="text" id="barcodeInput" class="form-control form-control-lg" placeholder="Сканируйте или введите штрих-код" autofocus>
+                    <button type="button" id="barcodeBtn" class="btn btn-primary">Найти</button>
+                </div>
+            </div>
+        </div>
+        <div class="card table-card">
+            <div class="card-header"><input type="text" id="searchMed" class="form-control" placeholder="Поиск препарата..."></div>
+            <div class="list-group list-group-flush" id="medList" style="max-height:350px;overflow-y:auto">
+                {% for m in medicines %}
+                <button type="button" class="list-group-item list-group-item-action med-item"
+                    data-id="{{ m.id }}" data-name="{{ m.name }}" data-price="{{ m.price }}" data-qty="{{ m.quantity }}" data-barcode="{{ m.barcode|default:'' }}">
+                    <div class="d-flex justify-content-between">
+                        <span>{{ m.name }}</span>
+                        <span>{{ m.price }} сом · {{ m.quantity }} шт.</span>
+                    </div>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card table-card">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0">Корзина</h5></div>
+            <div class="card-body p-0">
+                <div id="cartItems" class="pos-cart p-3"><p class="text-muted text-center">Корзина пуста</p></div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>Итого:</strong>
+                    <strong id="cartTotal">0.00</strong> сом
+                </div>
+                <button id="checkoutBtn" class="btn btn-success w-100 btn-lg" disabled>
+                    <i class="bi bi-receipt"></i> Оформить продажу
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const cart = {};
+const csrf = '{{ csrf_token }}';
+
+function renderCart() {
+    const el = document.getElementById('cartItems');
+    const keys = Object.keys(cart);
+    if (!keys.length) {
+        el.innerHTML = '<p class="text-muted text-center">Корзина пуста</p>';
+        document.getElementById('cartTotal').textContent = '0.00';
+        document.getElementById('checkoutBtn').disabled = true;
+        return;
+    }
+    let total = 0, html = '';
+    keys.forEach(id => {
+        const i = cart[id];
+        const sub = i.price * i.qty;
+        total += sub;
+        html += `<div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+            <div><strong>${i.name}</strong><br><small>${i.price} × </small>
+            <input type="number" min="1" max="${i.max}" value="${i.qty}" style="width:60px" class="form-control form-control-sm d-inline" onchange="setQty(${id}, this.value)"></div>
+            <span>${sub.toFixed(2)} сом <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${id})">×</button></span></div>`;
+    });
+    el.innerHTML = html;
+    document.getElementById('cartTotal').textContent = total.toFixed(2);
+    document.getElementById('checkoutBtn').disabled = false;
+}
+
+function addItem(id, name, price, max) {
+    if (cart[id]) { if (cart[id].qty < max) cart[id].qty++; }
+    else cart[id] = { name, price: parseFloat(price), qty: 1, max: parseInt(max) };
+    renderCart();
+}
+function setQty(id, v) { cart[id].qty = Math.min(Math.max(1, parseInt(v)||1), cart[id].max); renderCart(); }
+function removeItem(id) { delete cart[id]; renderCart(); }
+
+document.querySelectorAll('.med-item').forEach(btn => {
+    btn.addEventListener('click', () => addItem(btn.dataset.id, btn.dataset.name, btn.dataset.price, btn.dataset.qty));
+});
+
+document.getElementById('searchMed').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.med-item').forEach(b => {
+        b.style.display = b.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+async function lookupBarcode() {
+    const code = document.getElementById('barcodeInput').value.trim();
+    if (!code) return;
+    const r = await fetch(`{% url 'barcode_lookup' %}?barcode=${encodeURIComponent(code)}`);
+    const d = await r.json();
+    if (r.ok) addItem(d.id, d.name, d.price, d.quantity);
+    else alert(d.error || 'Не найдено');
+    document.getElementById('barcodeInput').value = '';
+}
+document.getElementById('barcodeBtn').addEventListener('click', lookupBarcode);
+document.getElementById('barcodeInput').addEventListener('keypress', e => { if (e.key === 'Enter') lookupBarcode(); });
+
+document.getElementById('checkoutBtn').addEventListener('click', async () => {
+    const items = Object.entries(cart).map(([id, i]) => ({ medicine_id: parseInt(id), quantity: i.qty }));
+    const r = await fetch("{% url 'sale_checkout' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: JSON.stringify(items)
+    });
+    const d = await r.json();
+    if (r.ok) window.location.href = `/sales/${d.sale_id}/receipt/`;
+    else alert(d.error || 'Ошибка оформления');
+});
+</script>
+{% endblock %}
